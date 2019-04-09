@@ -33,18 +33,19 @@ def connect(s_address, s_port, key_exchange):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # create new TCP socket supporting IPv4
         context = create_tls_context(key_exchange)  # create dedicated TLS context to be applied to connection
         tls_sock = context.wrap_socket(client_socket, do_handshake_on_connect=False)  # wrap connection with TLS context
+        tls_sock.settimeout(100)
         tls_sock.connect((s_address, s_port))  # attempt connection to server
     except:  # connection failed to establish
-        print "Connection failed."
+        print("Connection failed.")
         return -1
     try:  # negotiate TLS handshake
-        print "Connection succeeded, attempting handshake..."
+        print("Connection succeeded, attempting handshake...")
         tls_sock.do_handshake()  # perform TLS handshake with server
     except:  # handshake failed to negotiate
-        print "Handshake failed."
+        print("Handshake failed.")
         return -1
     else:  # tls handshake successfully established
-        print "Handshake succeeded. Chosen cipher is %s." % str(tls_sock.cipher()[0])
+        print("Handshake succeeded. Chosen cipher is %s." % str(tls_sock.cipher()[0]))
         return tls_sock
 
 
@@ -64,6 +65,7 @@ def get_key_mode(arg_list):
     else:
         return key_mode  # return key_mode to TlsClient if error checks pass
 
+
 server_address, server_port = '127.0.0.1', 50001
 
 key_exchange_mode = get_key_mode(sys.argv)  # key exchange mode: input either DHE or RSA
@@ -71,6 +73,6 @@ key_exchange_mode = get_key_mode(sys.argv)  # key exchange mode: input either DH
 tls_socket = connect(server_address, server_port, key_exchange_mode)  # connect to server over dedicated socket
 
 data = 'test_message'
-print 'Client sends: %s' % data
-tls_socket.send(data)  # send data to server
+print('Client sends: %s' % data)
+tls_socket.send(data.encode())  # send data to server
 tls_socket.close()  # close TCP connection with server
